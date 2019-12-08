@@ -17,6 +17,18 @@ table_2_1979 <- read_csv("table_2_1979.csv")
 table_2_1980 <- read_csv("table_2_1980.csv")
 table_3_1975 <- read_csv("table_3_1975.csv")
 table_3_1978 <- read_csv("table_3_1978.csv")
+
+# drop the first column because we don't need it 
+table_2_1979 = table_2_1979[, -1]
+table_2_1980 = table_2_1980[, -1]
+table_3_1975 = table_3_1975[, -1]
+table_3_1978 = table_3_1978[, -1]
+
+# We have to convert the data into proportions from counts
+table_2_1979 = as.matrix(table_2_1979 / sum(table_2_1979, na.rm = TRUE))
+table_2_1980 = as.matrix(table_2_1980 / sum(table_2_1980, na.rm = TRUE))
+table_3_1975 = as.matrix(table_3_1975 / sum(table_3_1975, na.rm = TRUE))
+table_3_1978 = as.matrix(table_3_1978 / sum(table_3_1978, na.rm = TRUE))
 ```
 
 $q_c$ = the probability that a susceptible individual does not get infected from the community
@@ -154,17 +166,9 @@ distance <- function(d1, d2, d_star1, d_star2){
 #'
 #' @return A prior sample that has 
 generate_abc_sample <- function(epsilon, d1, d2){
-  # drop the first column because we don't need it 
-  d1 = d1[, -1]
-  d2 = d2[, -1]
-  
   # get the dimensions for each dataframe
   dim_d1 = dim(d1)
   dim_d2 = dim(d2)
-  
-  # We have to convert the data into proportions from counts
-  d1 = as.matrix(d1 / sum(d1, na.rm = TRUE))
-  d2 = as.matrix(d2 / sum(d2, na.rm = TRUE))
   
   # basic ABC stuff
   while(TRUE){
@@ -192,7 +196,7 @@ generate_abc_sample <- function(epsilon, d1, d2){
 
 ```{r results for 3a}
 # only uncomment and run if we figure out it's broken, it takes a while
-results = replicate(200, generate_abc_sample(epsilon = .7,
+results = replicate(500, generate_abc_sample(epsilon = 1.01,
                                               d1 = table_2_1979,
                                               d2 = table_2_1980))
  
@@ -225,18 +229,18 @@ res_df %>%
 
 ```{r results for 3c}
 #only uncomment and run if we figure out it's broken, it takes a while
-# results2 = replicate(200, generate_abc_sample(epsilon = 0.895,
-#                                              d1 = table_3_1975,
-#                                              d2 = table_3_1978))
-# 
-# qc12 = results2[1,,]
-# qh12 = results2[2,,]
-# qc22 = results2[3,,]
-# qh22 = results2[4,,]
-# 
-# # this comes from table 2
-# res_df2 <- rbind(data.frame(year = 1975, qh = qh12, qc = qc12),
-#                 data.frame(year = 1978, qh = qh22, qc = qc22))
+results2 = replicate(200, generate_abc_sample(epsilon = 0.895,
+                                              d1 = table_3_1975,
+                                              d2 = table_3_1978))
+ 
+qc12 = results2[1,,]
+qh12 = results2[2,,]
+qc22 = results2[3,,]
+qh22 = results2[4,,]
+ 
+# this comes from table 2
+res_df2 <- rbind(data.frame(year = 1975, qh = qh12, qc = qc12),
+                 data.frame(year = 1978, qh = qh22, qc = qc22))
 ``` 
 
 ```{r}
