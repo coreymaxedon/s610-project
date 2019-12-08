@@ -80,21 +80,36 @@ data_gen <- function(qc, qh, m, n){
   d_star = matrix(NA, nrow = m, ncol = n)
   
   # make first row of matrix using w_{0s} = q_c^s
-  d_star[1, ] = qc^(1:n)      # number infected out of s, paper says s = 0,1,2,...
-                              # but j/0 is na
+  d_star[1, ] = qc^(1:n)
   
   # create rest of the data 
   # we will work across the matrix rather than down the columns
-  for (j in 2:(m-1)) {
-    d_star[j, j-1]= wjj = 1 - sum(d_star[ , j-1], na.rm = TRUE) # create diagonal data point 
-                                                                # (when j = s)
-    
-    for (s in j:n) {
-      # plug it in to the model_1 function to calculate the probability
-      d_star[j,s] = model_1(j - 1, s, qc, qh, wjj)
+  for (j in 2:m) {
+    for (s in 1:n) {
+      
+      # create diagonal data point (when j = j)
+      if (j - 1 == s){
+        
+        # follow the 1 - sum(wij)
+        acc = 0      
+        for (i in 1:(j-1)) {
+          # add the matrix elements above wjj
+          acc = acc + d_star[i, j - 1] 
+        }
+        # populate the matrix with 1 - acc
+        d_star[j, j - 1] = 1 - acc
+      }
+      
+      # upper triangular off diagonal calculation
+      if (s > j - 1){
+        # get the value for wjj for that row
+        wjj = d_star[j, j - 1]
+        
+        # plug it in to the model_1 function to calculate the probability
+        d_star[j,s] = model_1(j - 1, s, qc, qh, wjj)
+      }
     }
   }
-  d_star[m, m-1] = 1 - sum(d_star[ , m-1], na.rm = TRUE)
   
   return(d_star)
 }
@@ -134,13 +149,15 @@ frobenious <- function(A){
 #'
 #' @return
 distance <- function(d1, d2, d_star1, d_star2){
-
+  # We have to convert the data into proportions from counts
+  d1 = as.matrix(d1 / sum(d1, na.rm = TRUE))
+  d2 = as.matrix(d2 / sum(d2, na.rm = TRUE))
   # calculate the two frobenious norms
   f1 = frobenious(d1 - d_star1)
   f2 = frobenious(d2 - d_star2)
   
   # this is the distance metric
-  ans = 0.5 * (f1 + f2) 
+  ans = (1 / 2) * (f1 + f2) 
   return(ans)
 }
 ```
@@ -161,10 +178,6 @@ generate_abc_sample <- function(epsilon, d1, d2){
   # get the dimensions for each dataframe
   dim_d1 = dim(d1)
   dim_d2 = dim(d2)
-  
-  # We have to convert the data into proportions from counts
-  d1 = as.matrix(d1 / sum(d1, na.rm = TRUE))
-  d2 = as.matrix(d2 / sum(d2, na.rm = TRUE))
   
   # basic ABC stuff
   while(TRUE){
@@ -192,19 +205,19 @@ generate_abc_sample <- function(epsilon, d1, d2){
 
 ```{r results for 3a}
 # only uncomment and run if we figure out it's broken, it takes a while
-results = replicate(200, generate_abc_sample(epsilon = .7,
-                                              d1 = table_2_1979,
-                                              d2 = table_2_1980))
- 
-qc1 = results[1,,]
-qh1 = results[2,,]
-qc2 = results[3,,]
-qh2 = results[4,,]
- 
-# this comes from table 2
-res_df <- rbind(data.frame(year = 1977, qh = qh1, qc = qc1), 
-                data.frame(year = 1980, qh = qh2, qc = qc2))
-write.csv(res_df, "results_3a.csv")
+# results = replicate(200, generate_abc_sample(epsilon = 1,
+#                                              d1 = table_2_1979,
+#                                              d2 = table_2_1980))
+# 
+# qc1 = results[1,,]
+# qh1 = results[2,,]
+# qc2 = results[3,,]
+# qh2 = results[4,,]
+# 
+# # this comes from table 2
+# res_df <- rbind(data.frame(year = 1977, qh = qh1, qc = qc1), 
+#                 data.frame(year = 1980, qh = qh2, qc = qc2))
+# write.csv(res_df, "results_3a.csv")
 ``` 
 
 ```{r}
