@@ -25,10 +25,21 @@ table_3_1975 = table_3_1975[, -1]
 table_3_1978 = table_3_1978[, -1]
 
 # We have to convert the data into proportions from counts
-table_2_1979 = as.matrix(table_2_1979 / sum(table_2_1979, na.rm = TRUE))
-table_2_1980 = as.matrix(table_2_1980 / sum(table_2_1980, na.rm = TRUE))
-table_3_1975 = as.matrix(table_3_1975 / sum(table_3_1975, na.rm = TRUE))
-table_3_1978 = as.matrix(table_3_1978 / sum(table_3_1978, na.rm = TRUE))
+divfun <- function(x) {
+  x = as.matrix(x)
+  ans = matrix(NA, nrow = dim(x)[1], ncol = dim(x)[2])
+  for (i in 1:dim(x)[1]) {
+    for (j in 1:dim(x)[2]) {
+      ans[i, j] = x[i, j] / sum(x[ , j], na.rm = TRUE)
+    }
+  }
+  return(ans)
+}
+
+table_2_1979 = divfun(table_2_1979)
+table_2_1980 = divfun(table_2_1980)
+table_3_1975 = divfun(table_3_1975)
+table_3_1978 = divfun(table_3_1978)
 ```
 
 $q_c$ = the probability that a susceptible individual does not get infected from the community
@@ -176,8 +187,8 @@ generate_abc_sample <- function(epsilon, d1, d2){
     prior = simulate_parameters() 
     
     # generate data
-    res1 = data_gen(prior$qc1, prior$qh1, m = dim_d1[1], n = dim_d1[2])
-    res2 = data_gen(prior$qc2, prior$qh2, m = dim_d2[1], n = dim_d2[2])
+    res1 = data_gen(qc = prior$qc1, qh = prior$qh1, m = dim_d1[1], n = dim_d1[2])
+    res2 = data_gen(qc = prior$qc2, qh = prior$qh2, m = dim_d2[1], n = dim_d2[2])
     
     # calculate distance
     distance = distance(d1,
@@ -196,22 +207,23 @@ generate_abc_sample <- function(epsilon, d1, d2){
 
 ```{r results for 3a}
 # only uncomment and run if we figure out it's broken, it takes a while
-results = replicate(500, generate_abc_sample(epsilon = 1.01,
-                                              d1 = table_2_1979,
-                                              d2 = table_2_1980))
- 
-qc1 = results[1,,]
-qh1 = results[2,,]
-qc2 = results[3,,]
-qh2 = results[4,,]
- 
+# results = replicate(1000, generate_abc_sample(epsilon = 0.3,
+#                                              d1 = table_2_1979,
+#                                              d2 = table_2_1980))
+  
+# qc1 = results[1,,]
+# qh1 = results[2,,]
+# qc2 = results[3,,]
+# qh2 = results[4,,]
+  
 # this comes from table 2
-res_df <- rbind(data.frame(year = 1977, qh = qh1, qc = qc1), 
-                data.frame(year = 1980, qh = qh2, qc = qc2))
-write.csv(res_df, "results_3a.csv")
+# res_df <- rbind(data.frame(year = 1977, qh = qh1, qc = qc1), 
+#                 data.frame(year = 1980, qh = qh2, qc = qc2))
 ``` 
 
 ```{r}
+# write.csv(res_df, "results_3a.csv")
+
 # load in the data that was saved from above
 res_df <- read.csv("results_3a.csv")
 ``` 
@@ -219,7 +231,8 @@ res_df <- read.csv("results_3a.csv")
 ```{r}
 res_df %>% 
   ggplot(aes(qh, qc, color = factor(year)))+
-  geom_point()+
+  geom_point(shape=1, stroke = 1.055)+
+  scale_color_manual(values = c("red", "blue")) +
   theme_minimal()+
   scale_x_continuous(breaks = seq(0,1,0.2), limits = c(0,1))+
   scale_y_continuous(breaks = seq(0,1,0.2), limits = c(0,1))+
@@ -228,23 +241,23 @@ res_df %>%
 ```
 
 ```{r results for 3c}
-#only uncomment and run if we figure out it's broken, it takes a while
-results2 = replicate(200, generate_abc_sample(epsilon = 0.895,
-                                              d1 = table_3_1975,
-                                              d2 = table_3_1978))
- 
-qc12 = results2[1,,]
-qh12 = results2[2,,]
-qc22 = results2[3,,]
-qh22 = results2[4,,]
- 
+# only uncomment and run if we figure out it's broken, it takes a while
+# results2 = replicate(1000, generate_abc_sample(epsilon = 0.3,
+#                                               d1 = table_3_1975,
+#                                               d2 = table_3_1978))
+#  
+# qc12 = results2[1,,]
+# qh12 = results2[2,,]
+# qc22 = results2[3,,]
+# qh22 = results2[4,,]
+#  
 # this comes from table 2
-res_df2 <- rbind(data.frame(year = 1975, qh = qh12, qc = qc12),
-                 data.frame(year = 1978, qh = qh22, qc = qc22))
+# res_df2 <- rbind(data.frame(year = 1975, qh = qh12, qc = qc12),
+#                  data.frame(year = 1978, qh = qh22, qc = qc22))
 ``` 
 
 ```{r}
-#write.csv(res_df2, "results_3c.csv")
+# write.csv(res_df2, "results_3c.csv")
 
 # load in the data that was saved from above
 res_df2 <- read.csv("results_3c.csv")
@@ -253,7 +266,8 @@ res_df2 <- read.csv("results_3c.csv")
 ```{r 3c plot}
 res_df2 %>% 
   ggplot(aes(qh, qc, color = factor(year)))+
-  geom_point()+
+  geom_point(shape = 1, stroke = 1.055)+
+  scale_color_manual(values = c("red", "blue")) +
   theme_minimal()+
   scale_x_continuous(breaks = seq(0,1,0.2), limits = c(0,1))+
   scale_y_continuous(breaks = seq(0,1,0.2), limits = c(0,1))+
