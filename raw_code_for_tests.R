@@ -1,17 +1,3 @@
----
-title: "ABC Project"
-author: "Austin Lesh, Corey Maxedon, Joe Stoica"
-date: "12/13/2019"
-output: pdf_document
----
-
-```{r setup, include=FALSE, echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(plyr)
-```
-
-```{r data in, message=FALSE,warning=FALSE}
 # read in the data
 table_2_1979 <- read.csv("table_2_1979.csv")
 table_2_1980 <- read.csv("table_2_1980.csv")
@@ -40,22 +26,13 @@ table_2_1979 = divfun(table_2_1979)
 table_2_1980 = divfun(table_2_1980)
 table_3_1975 = divfun(table_3_1975)
 table_3_1978 = divfun(table_3_1978)
-```
 
-$q_c$ = the probability that a susceptible individual does not get infected from the community
 
-$q_h$ = the probability that a susceptible individual escapes infection within their household
 
-$w_{js}$ = the probability that j out of the s susceptibles in a household become infected, is given by
 
-$$w_{js} = {s\choose j}w_{jj}(q_cq_h^j)^{s-j}$$
-where 
-- $w_{0s} = q_c^s$ for $s=0,1,2,\dots$
-- $w_{jj} = 1 - \sum_{i=0}^{j-1}w_{ij}$.
+#We will refer to this as model (1).
 
-We will refer to this as model (1).
 
-```{r prior}
 #' Generates four numbers between 0 and 1 and will act as the priors
 #'
 #' @return a list of four random numbers
@@ -69,9 +46,8 @@ simulate_parameters <- function() {
   names(param) = names
   return(param)
 }
-``` 
 
-```{r model 1}
+
 #' The probability that j out of the s susceptibles in a household become infected
 #' 
 #' @param j number that become infected
@@ -84,9 +60,7 @@ simulate_parameters <- function() {
 model_1 <- function(j, s, qc, qh, wjj){
   return(choose(s, j) * wjj * (qc * qh^j)^(s - j))
 }
-``` 
 
-```{r generate the data}
 #' Generate data from the model specified above
 #'
 #' @param qc probability that a susceptible individual does not get infected from the community
@@ -103,13 +77,13 @@ data_gen <- function(qc, qh, m, n){
   
   # make first row of matrix using w_{0s} = q_c^s
   d_star[1, ] = qc^(1:n)      # number infected out of s, paper says s = 0,1,2,...
-                              # but j/0 is na
+  # but j/0 is na
   
   # create rest of the data 
   # we will work across the matrix rather than down the columns
   for (j in 2:(m-1)) {
     d_star[j, j-1]= wjj = 1 - sum(d_star[ , j-1], na.rm = TRUE) # create diagonal data point 
-                                                                # (when j = s)
+    # (when j = s)
     
     for (s in j:n) {
       # plug it in to the model_1 function to calculate the probability
@@ -120,21 +94,7 @@ data_gen <- function(qc, qh, m, n){
   
   return(d_star)
 }
-``` 
 
-Use the distance function:
-
-$$d(D_0,D^*)=\frac{1}{2}(||D_1 - D^*(q_{h1},q_{c1})||_F+||D_2 - D^*(q_{h2},q_{c2})||_F)$$
-
-where
-- $$||A||_F=\sqrt{trace(A^TA)}$$ denotes the Frobenious norm of A.
-
-- $D_0 = D_1 \cup D_2$, with
-- $D_1$ being the 1977-98 outbreak
-- $D_2$ being the 1980-81 outbreak
-- $D^*$ is the simulation output from model (1) 
-
-```{r frobenious/distance}
 #' Calculate the frobenious norm of a matrix
 #'
 #' @param A the matrix
@@ -143,9 +103,7 @@ where
 frobenious <- function(A){
   return(sqrt(sum(abs(A)^2, na.rm = TRUE)))
 }
-``` 
 
-```{r}
 #' Calculating the distance specified above
 #'
 #' @param d1 The first data matrix (i.e. 1977-78 from table 2)
@@ -155,7 +113,7 @@ frobenious <- function(A){
 #'
 #' @return
 distance <- function(d1, d2, d_star1, d_star2){
-
+  
   # calculate the two frobenious norms
   f1 = frobenious(d1 - d_star1)
   f2 = frobenious(d2 - d_star2)
@@ -164,9 +122,8 @@ distance <- function(d1, d2, d_star1, d_star2){
   ans = 0.5 * (f1 + f2) 
   return(ans)
 }
-```
 
-```{r generate abc function}
+
 #' Generate an ABC sample
 #'
 #' @param epsilon The specified tolerance levels
@@ -201,32 +158,31 @@ generate_abc_sample <- function(epsilon, d1, d2){
   }
   return(do.call(rbind, prior))
 }
-```
 
-```{r results for 3a}
+
 # only uncomment and run if we figure out it's broken, it takes a while
 # results = replicate(1000, generate_abc_sample(epsilon = 0.3,
 #                                              d1 = table_2_1979,
 #                                              d2 = table_2_1980))
-  
+
 # qc1 = results[1,,]
 # qh1 = results[2,,]
 # qc2 = results[3,,]
 # qh2 = results[4,,]
-  
+
 # this comes from table 2
 # res_df <- rbind(data.frame(year = 1977, qh = qh1, qc = qc1), 
 #                 data.frame(year = 1980, qh = qh2, qc = qc2))
-``` 
 
-```{r}
+
+
 # write.csv(res_df, "results_3a.csv")
 
 # load in the data that was saved from above
 res_df <- read.csv("results_3a.csv")
-``` 
 
-```{r}
+
+
 res_df %>% 
   ggplot(aes(qh, qc, color = factor(year)))+
   geom_point(shape=1, stroke = 1.055)+
@@ -235,105 +191,3 @@ res_df %>%
   scale_x_continuous(breaks = seq(0,1,0.2), limits = c(0,1))+
   scale_y_continuous(breaks = seq(0,1,0.2), limits = c(0,1))+
   labs(color = "Year")
-  NULL
-```
-
-```{r results for 3c}
-# only uncomment and run if we figure out it's broken, it takes a while
-# results2 = replicate(1000, generate_abc_sample(epsilon = 0.3,
-#                                               d1 = table_3_1975,
-#                                               d2 = table_3_1978))
-#  
-# qc12 = results2[1,,]
-# qh12 = results2[2,,]
-# qc22 = results2[3,,]
-# qh22 = results2[4,,]
-#  
-# this comes from table 2
-# res_df2 <- rbind(data.frame(year = 1975, qh = qh12, qc = qc12),
-#                  data.frame(year = 1978, qh = qh22, qc = qc22))
-``` 
-
-```{r}
-# write.csv(res_df2, "results_3c.csv")
-
-# load in the data that was saved from above
-res_df2 <- read.csv("results_3c.csv")
-``` 
-
-```{r 3c plot}
-res_df2 %>% 
-  ggplot(aes(qh, qc, color = factor(year)))+
-  geom_point(shape = 1, stroke = 1.055)+
-  scale_color_manual(values = c("red", "blue")) +
-  theme_minimal()+
-  scale_x_continuous(breaks = seq(0,1,0.2), limits = c(0,1))+
-  scale_y_continuous(breaks = seq(0,1,0.2), limits = c(0,1))+
-  labs(color = "Year")+
-  NULL
-```
-
-
-# Testing Stuff
-
-```{r tests}
-#qc = 0.25
-#qh = 0.75
-
-#model_1(j = 1, s = 3, qc = qc, qh =  qh, wjj =  (3/4))
-#data_gen(qc = 0.25, qh = 0.75, m = 4, n =3)
-
-#test1 = data_gen(qc = 0.25, qh = 0.75, m = 4, n =3)
-
-#onethree = choose(3,1) * (3/4) * (qc * qh^1)^2
-#twothree = choose(3,2) * (27/32) * (qc * qh^2)^1
-#test = matrix(c(0.25, 0.75, NA, NA,
-                #(1/16), (3/32), (27/32), NA,
-                #(1/64), onethree, twothree, (1 - onethree - twothree - (1/64))),
-         #ncol = 3, nrow = 4)
-
-#test == test1
-``` 
-
-```{r}
-#this is to see a good epsilon for 3a
-#test_f <- function() {
-  #test = simulate_parameters()
-  #res1 = data_gen(test$qc1, test$qh1,6,5)
-  #res2 = data_gen(test$qc2, test$qh2,6,5)
-
-  #d = distance(d1 = table_2_1979[, -1],
-           #d2 = table_2_1980[, -1],
-           #d_star1 = res1,
-           #d_star2 = res2)
-
-  #return(d)
-#}
-
-#x = replicate(1000, test_f())
-#quantile(x, seq(0.01, 0.2, 0.01))
-``` 
-
-
-```{r}
-#this is to see a good epsilon for 3c
-#test_f <- function(d1,d2) {
-  #d1 = d1[, -1]
-  #d2 = d2[, -1]
-  #dim_d1 = dim(d1)
-  #dim_d2 = dim(d2)
-  #prior = simulate_parameters() 
-  
-  # generate data
-  #res1 = data_gen(prior$qc1, prior$qh1, m = dim_d1[1], n = dim_d1[2])
-  #res2 = data_gen(prior$qc2, prior$qh2, m = dim_d2[1], n = dim_d2[2])
-  
-  #distance = distance(d1,
-                      #d2,
-                      #d_star1 = res1,
-                      #d_star2 = res2)
-#}
-
-#x = replicate(1000, test_f(d1 = table_3_1975, d2 = table_3_1978))
-#quantile(x, seq(0.01, 0.2, 0.01))
-```
