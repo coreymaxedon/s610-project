@@ -1,0 +1,42 @@
+---
+title: "ABC Project Write-up"
+author: "Austin Lesh, Corey Maxedon, Joe Stoica"
+date: "December 10, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+After converting the data in the paper supplement to .csv, we read it into R and dropped the first column (row indices). Each table was then put through a function called `divfun`, which converted the raw data of infected individual counts into proportions, which are usable for our purposes.
+
+We then set about defining our priors for the four parameters and our model for data generation. The priors are simply four uniform random variables in the interval [0, 1]. The data generation model, which we call `model (1)`, calculates the probabilities of an outcome (`j` number of individuals infected out of `s` susceptible individuals), defined as follows:
+
+$q_c$ = the probability that a susceptible individual does not get infected from the community
+
+$q_h$ = the probability that a susceptible individual escapes infection within their household
+
+$w_{js}$ = the probability that j out of the s susceptibles in a household become infected, is given by
+
+$$w_{js} = {s\choose j}w_{jj}(q_cq_h^j)^{s-j}$$
+
+where 
+$w_{0s} = q_c^s$ for $s=0,1,2,\dots$
+and $w_{jj} = 1 - \sum_{i=0}^{j-1}w_{ij}$.
+
+Approximate Bayesian Computation also requires a test statistic for acceptance or rejection of a sample. We use the distance function given in Toni and Stumpf:
+
+$$d(D_0,D^*)=\frac{1}{2}(||D_1 - D^*(q_{h1},q_{c1})||_F+||D_2 - D^*(q_{h2},q_{c2})||_F)$$
+
+where
+$$||A||_F=\sqrt{trace(A^TA)}$$ denotes the Frobenious norm of A. We also have:
+
+- $D_0 = D_1 \cup D_2$, with
+- $D_1$ being the 1977-98 outbreak
+- $D_2$ being the 1980-81 outbreak
+- $D^*$ is the simulation output from model (1).
+
+##### We coded this function (and the underlying frobenious norm function) into R and used it later to accept or reject a ##### sample if the distance was less than our tolerance level `epsilon`. `Epsilon` itself came from ________ 
+
+Finally, we arrive at our `generate_abc_sample` function which does what its name implies. This function combines the prior distributions, data generating function, and distance function and performs the ABC algorithm as described in class. We ran this function 1,000 times each for the 1977/1980 data and the 1975/1978 data. The resulting (`qh`, `qc`) pairs were plotted in `ggplot2` to recreate tables 3(a) and 3(c) from the Toni and Stumpf paper, respectively.
