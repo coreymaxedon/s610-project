@@ -54,3 +54,15 @@ test_that("frobenious norm works", {
   expect_equal(frobenious(A), 6)
 })
 
+
+
+## Test generate_abc_sample for correct dimensions of output and that all elements between 0 and 1
+
+test_that("generate_abc_sample output correct dimensions", {
+  expect_equal(dim(generate_abc_sample(epsilon = 0.3, table_2_1979, table_2_1980)), c(4,1))
+})
+
+test_that("generate_abc_sample output correct magnitude", {
+  expect_true(all(generate_abc_sample(epsilon = 0.3, table_2_1979, table_2_1980)) >= 0 &
+                all(generate_abc_sample(epsilon = 0.3, table_2_1979, table_2_1980)) <= 1)
+})
