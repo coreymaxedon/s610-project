@@ -5,6 +5,7 @@
 context("Check Project Functions")
 source("raw_code_for_tests.R")
 
+
 ## Test that divfun is converting data to probabilities correctly, 
 ## i.e. that all elements are in [0,1], and returns a matrix
 
@@ -21,7 +22,6 @@ test_that("divfun returns probabilities", {
 test_that("divfun returns a matrix", {
   expect_equal(class(divfun(x)), "matrix")
 })
-
 
 
 ## Test data generation function using some easy-ish numbers
@@ -44,3 +44,13 @@ test = matrix(c(0.25, 0.75, NA, NA,
 test_that("data_gen works", {
   expect_equal(test, test1)
 })
+
+
+## Test frobenious norm using easy numbers
+
+A <- c(0, 1, 5, -3, 1)
+
+test_that("frobenious norm works", {
+  expect_equal(frobenious(A), 6)
+})
+
