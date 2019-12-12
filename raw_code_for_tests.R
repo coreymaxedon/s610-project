@@ -1,3 +1,6 @@
+library(tidyverse)
+library(plyr)
+
 # read in the data
 table_2_1979 <- read.csv("table_2_1979.csv")
 table_2_1980 <- read.csv("table_2_1980.csv")
