@@ -1,7 +1,7 @@
 ---
 title: "ABC Project"
 author: "Austin Lesh, Corey Maxedon, Joe Stoica"
-date: "12/13/2019"
+date: "12/12/2019"
 output: pdf_document
 ---
 
@@ -166,6 +166,32 @@ distance <- function(d1, d2, d_star1, d_star2){
 }
 ```
 
+```{r get suitable epsilon}
+# function and analysis to get appropriate epsilon
+test_epsilon <- function(d1, d2){
+  # get the dimensions for each dataframe
+  dim_d1 = dim(d1)
+  dim_d2 = dim(d2)
+  
+  # prior
+  prior = simulate_parameters() 
+    
+  # generate data
+  res1 = data_gen(qc = prior$qc1, qh = prior$qh1, m = dim_d1[1], n = dim_d1[2])
+  res2 = data_gen(qc = prior$qc2, qh = prior$qh2, m = dim_d2[1], n = dim_d2[2])
+    
+  # calculate distance
+  distance = distance(d1,
+                      d2,
+                      d_star1 = res1,
+                      d_star2 = res2)
+  return(distance)
+}  
+
+x = replicate(1000, test_epsilon(d1 = table_3_1975, d2 = table_3_1978))
+epsilon = quantile(x, 0.001)
+```
+
 ```{r generate abc function}
 #' Generate an ABC sample
 #'
@@ -271,50 +297,4 @@ res_df2 %>%
   scale_y_continuous(breaks = seq(0,1,0.2), limits = c(0,1))+
   labs(color = "Year")+
   NULL
-```
-
-
-# Testing for good epsilons
-
-```{r}
-#this is to see a good epsilon for 3a
-#test_f <- function() {
-  #test = simulate_parameters()
-  #res1 = data_gen(test$qc1, test$qh1,6,5)
-  #res2 = data_gen(test$qc2, test$qh2,6,5)
-
-  #d = distance(d1 = table_2_1979[, -1],
-           #d2 = table_2_1980[, -1],
-           #d_star1 = res1,
-           #d_star2 = res2)
-
-  #return(d)
-#}
-
-#x = replicate(1000, test_f())
-#quantile(x, seq(0.01, 0.2, 0.01))
-``` 
-
-
-```{r}
-#this is to see a good epsilon for 3c
-#test_f <- function(d1,d2) {
-  #d1 = d1[, -1]
-  #d2 = d2[, -1]
-  #dim_d1 = dim(d1)
-  #dim_d2 = dim(d2)
-  #prior = simulate_parameters() 
-  
-  # generate data
-  #res1 = data_gen(prior$qc1, prior$qh1, m = dim_d1[1], n = dim_d1[2])
-  #res2 = data_gen(prior$qc2, prior$qh2, m = dim_d2[1], n = dim_d2[2])
-  
-  #distance = distance(d1,
-                      #d2,
-                      #d_star1 = res1,
-                      #d_star2 = res2)
-#}
-
-#x = replicate(1000, test_f(d1 = table_3_1975, d2 = table_3_1978))
-#quantile(x, seq(0.01, 0.2, 0.01))
 ```
